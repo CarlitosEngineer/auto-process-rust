@@ -1,5 +1,3 @@
-// C:\\Users\\carlo\\Downloads\\New folder
-
 use std::collections::HashSet;
 use std::fs;
 use std::io::Read;
@@ -7,7 +5,7 @@ use std::path::Path;
 use walkdir::WalkDir;
 
 fn main() {
-    let root_path = "";
+    let root_path = "C:\\Users\\carlo\\Downloads\\New folder";
     remove_global_duplicate_images(root_path).unwrap();
 }
 
@@ -18,15 +16,14 @@ fn remove_global_duplicate_images(root: &str) -> std::io::Result<()> {
         .min_depth(1)
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|e| e.path().is_file())
+        .filter(|e| e.path().is_file() && is_image(e.path()))
     {
         let file_path = entry.path();
 
         if let Ok(hash) = hash_file(file_path) {
             if !hashes.insert(hash) {
-                // Ya vimos este hash en otro lugar
                 println!("🗑️ Eliminando duplicado global: {}", file_path.display());
-                fs::remove_file(file_path)?;
+                fs::remove_file(file_path)?; // o mover al basurero
             }
         }
     }
@@ -41,5 +38,13 @@ fn hash_file<P: AsRef<Path>>(path: P) -> std::io::Result<String> {
     Ok(format!("{:x}", md5::compute(buffer)))
 }
 
-
-
+fn is_image(path: &Path) -> bool {
+    if let Some(ext) = path.extension() {
+        matches!(
+            ext.to_str().unwrap_or("").to_lowercase().as_str(),
+            "jpg" | "jpeg" | "png" | "gif" | "bmp" | "webp"
+        )
+    } else {
+        false
+    }
+}
