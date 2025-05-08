@@ -1,49 +1,88 @@
-use std::fs;
-// use std::path::{Path, PathBuf};
-// use walkdir::WalkDir;
 use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
-fn main() {
-    let root_path = ""; 
-    rename_images_in_subfolders(root_path).unwrap();
+const IMAGE_EXTENSIONS: [&str; 7] = ["jpg", "jpeg", "png", "bmp", "gif", "tiff", "webp"];
+
+fn es_extension_valida(path: &Path) -> Option<String> {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext_str| ext_str.to_ascii_lowercase())
+        .filter(|ext_str| IMAGE_EXTENSIONS.contains(&ext_str.as_str()))
 }
 
-fn rename_images_in_subfolders(root: &str) -> std::io::Result<()> {
-    let mut counters: HashMap<String, u32> = HashMap::new();
+fn construir_nuevo_nombre(
+    nombre_carpeta: &str,
+    extension_mayus: &str,
+    contador: usize,
+    extension_original: &str,
+) -> String {
+    format!(
+        "{}_{}_({}).{}",
+        nombre_carpeta, extension_mayus, contador, extension_original
+    )
+}
 
-    for entry in fs::read_dir(root)? {
-        let entry = entry?;
+fn main() {
+    use std::io::{self, Write};
+
+    print!("Introduce la ruta de la carpeta: ");
+    io::stdout().flush().unwrap();
+
+    let mut ruta = String::new();
+    io::stdin().read_line(&mut ruta).unwrap();
+    let ruta = ruta.trim();
+
+    let mut contador_por_carpeta_extension: HashMap<(String, String), usize> = HashMap::new();
+
+    for entry in WalkDir::new(ruta)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_file())
+    {
         let path = entry.path();
 
-        if path.is_dir() {
-            let subfolder_name = path.file_name().unwrap().to_string_lossy().to_string();
+        if let Some(ext) = es_extension_valida(path) {
+            let extension_mayus = ext.to_ascii_uppercase();
+            let extension_original = ext; // en minúscula
 
-            for file in fs::read_dir(&path)? {
-                let file = file?;
-                let file_path = file.path();
+            let carpeta = path
+                .parent()
+                .and_then(|p| p.file_name())
+                .and_then(|n| n.to_str())
+                .unwrap_or("SIN_NOMBRE")
+                .to_string();
 
-                if file_path.is_file() {
-                    if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-                        let ext_upper = ext.to_uppercase();
-                        let counter = counters.entry(subfolder_name.clone()).or_insert(1);
+            let key = (carpeta.clone(), extension_mayus.clone());
+            let contador = contador_por_carpeta_extension
+                .entry(key)
+                .and_modify(|c| *c += 1)
+                .or_insert(1);
+            let contador_actual = *contador;
 
-                        let new_filename = format!(
-                            // "{}_img-{}{}.{}",
-                            "{} {}{}.{}",
-                            subfolder_name,
-                            ext_upper,
-                            counter,
-                            ext
-                        );
+            let nuevo_nombre = construir_nuevo_nombre(
+                &carpeta,
+                &extension_mayus,
+                contador_actual,
+                &extension_original,
+            );
 
-                        let new_path = file_path.with_file_name(new_filename);
-                        fs::rename(&file_path, &new_path)?;
-                        *counter += 1;
-                    }
-                }
+            let nuevo_path = path.with_file_name(&nuevo_nombre);
+
+            match fs::rename(&path, &nuevo_path) {
+                Ok(_) => println!(
+                    "✅ Renombrado:\n    {}  →  {}",
+                    path.display(),
+                    nuevo_path.display()
+                ),
+                Err(e) => eprintln!("❗ Error al renombrar {}: {}", path.display(), e),
             }
         }
     }
 
-    Ok(())
+    println!("🏁 Renombrado completado.");
 }
+
+// cargo build --release --bin rename-files-img
+// cargo run --release --bin rename-files-img
