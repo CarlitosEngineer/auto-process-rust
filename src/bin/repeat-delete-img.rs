@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::{Read, BufReader};
+use std::io::{BufReader, Read};
 use std::path::Path;
 use walkdir::WalkDir;
 
@@ -79,6 +79,10 @@ fn main() {
     println!("🏁 Proceso completado.");
 }
 
-// cargo build --release --bin repeat-delete-img
-// cargo run --release --bin repeat-delete-img
+/*
 
+cargo build --release --bin repeat-delete-img
+
+cargo run --release --bin repeat-delete-img
+
+*/

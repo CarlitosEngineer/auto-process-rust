@@ -84,5 +84,10 @@ fn main() {
     println!("🏁 Renombrado completado.");
 }
 
-// cargo build --release --bin rename-files-img
-// cargo run --release --bin rename-files-img
+/*
+
+cargo build --release --bin rename-files-img
+
+cargo run --release --bin rename-files-img
+
+*/

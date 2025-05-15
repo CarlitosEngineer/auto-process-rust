@@ -84,5 +84,10 @@ fn main() {
     println!("🏁 Renombrado completado.");
 }
 
-// cargo build --release --bin rename-files-vid
-// cargo run --release --bin rename-files-vid
+/*
+
+cargo build --release --bin rename-files-vid
+
+cargo run --release --bin rename-files-vid
+
+*/

@@ -97,5 +97,10 @@ fn main() {
     buscar_y_eliminar_duplicados(ruta);
 }
 
-// cargo build --release --bin repeat-delete-vid
-// cargo run --release --bin repeat-delete-vid
+/*
+
+cargo build --release --bin repeat-delete-vid
+
+cargo run --release --bin repeat-delete-vid
+
+*/
